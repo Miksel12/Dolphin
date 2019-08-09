@@ -48,8 +48,8 @@ MappingButton::MappingButton(MappingWidget* parent, ControlReference* ref, bool 
   // Force all mapping buttons to stay at a minimal height.
   setFixedHeight(minimumSizeHint().height());
 
-  // Make sure that long entries don't throw our layout out of whack.
-  setFixedWidth(WIDGET_MAX_WIDTH);
+  // Make sure that short entries don't hide button mappings.
+  setMinimumWidth(75);
 
   setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 

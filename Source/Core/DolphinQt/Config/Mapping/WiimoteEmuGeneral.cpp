@@ -52,7 +52,7 @@ void WiimoteEmuGeneral::CreateMainLayout()
 
   extension->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-  static_cast<QFormLayout*>(extension->layout())->insertRow(0, m_extension_combo);
+  static_cast<QGridLayout*>(extension->layout())->addWidget(m_extension_combo, 1, 0, 1, 2);
 
   layout->addWidget(extension, 0, 3);
   layout->addWidget(CreateGroupBox(tr("Rumble"), Wiimote::GetWiimoteGroup(

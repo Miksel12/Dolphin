@@ -8,6 +8,8 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QTimer>
+#include <QLabel>
+#include <Qt>
 
 #include "DolphinQt/Config/Mapping/IOWindow.h"
 #include "DolphinQt/Config/Mapping/MappingButton.h"
@@ -59,9 +61,11 @@ QGroupBox* MappingWidget::CreateGroupBox(ControllerEmu::ControlGroup* group)
 QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::ControlGroup* group)
 {
   QGroupBox* group_box = new QGroupBox(name);
-  QFormLayout* form_layout = new QFormLayout();
+  QGridLayout* grid_layout = new QGridLayout();
 
-  group_box->setLayout(form_layout);
+  int vertical_position = 0;
+
+  group_box->setLayout(grid_layout);
 
   const bool need_indicator = group->type == ControllerEmu::GroupType::Cursor ||
                               group->type == ControllerEmu::GroupType::Stick ||
@@ -90,7 +94,9 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
       break;
     }
 
-    form_layout->addRow(indicator);
+    grid_layout->addWidget(indicator, vertical_position, 0, 1, 2);
+
+    vertical_position++;
 
     connect(this, &MappingWidget::Update, indicator, QOverload<>::of(&MappingIndicator::update));
 
@@ -99,7 +105,9 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
       const auto calibrate =
           new CalibrationWidget(*static_cast<ControllerEmu::ReshapableInput*>(group), *indicator);
 
-      form_layout->addRow(calibrate);
+      grid_layout->addWidget(calibrate, vertical_position, 0, 1, 2);
+
+      vertical_position++;
     }
   }
 
@@ -107,12 +115,15 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
   {
     auto* button = new MappingButton(this, control->control_ref.get(), !need_indicator);
 
-    button->setMinimumWidth(100);
     button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     const bool translate = control->translate == ControllerEmu::Translate;
     const QString translated_name =
         translate ? tr(control->ui_name.c_str()) : QString::fromStdString(control->ui_name);
-    form_layout->addRow(translated_name, button);
+
+    grid_layout->addWidget(new QLabel(translated_name), vertical_position, 0);
+    grid_layout->addWidget(button, vertical_position, 1);
+
+    vertical_position++;
 
     m_buttons.push_back(button);
   }
@@ -135,8 +146,15 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
     }
 
     if (setting_widget)
-      form_layout->addRow(tr(setting->GetUIName()), setting_widget);
+      grid_layout->addWidget(new QLabel(tr(setting->GetUIName())), vertical_position, 0);
+      grid_layout->addWidget(setting_widget, vertical_position, 1);
+
+      vertical_position++;
   }
+
+  QWidget* spacer = new QWidget();
+  spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  grid_layout->addWidget(spacer);
 
   return group_box;
 }
