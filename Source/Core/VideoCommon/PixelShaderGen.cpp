@@ -182,7 +182,7 @@ PixelShaderUid GetPixelShaderUid()
   uid_data->bounding_box = g_ActiveConfig.bBBoxEnable && BoundingBox::active;
   uid_data->rgba6_format =
       bpmem.zcontrol.pixel_format == PEControl::RGBA6_Z24 && !g_ActiveConfig.bForceTrueColor;
-  uid_data->dither = bpmem.blendmode.dither && uid_data->rgba6_format;
+  uid_data->dither = bpmem.blendmode.dither; // && uid_data->rgba6_format;
   uid_data->uint_output = bpmem.blendmode.UseLogicOp();
 
   u32 numStages = uid_data->genMode_numtevstages + 1;
