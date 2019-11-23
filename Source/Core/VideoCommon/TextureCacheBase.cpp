@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <xxhash.h>
 #if defined(_M_X86) || defined(_M_X86_64)
 #include <pmmintrin.h>
 #endif
@@ -2896,10 +2897,13 @@ int TextureCacheBase::TCacheEntry::HashSampleSize() const
 
 u64 TextureCacheBase::TCacheEntry::CalculateHash() const
 {
-  u8* ptr = Memory::GetPointer(addr);
+  const u8* ptr = Memory::GetPointer(addr);
   if (memory_stride == BytesPerRow())
   {
-    return Common::GetHash64(ptr, size_in_bytes, HashSampleSize());
+    if (HashSampleSize() != 0)
+      return Common::GetHash64(ptr, size_in_bytes, HashSampleSize());
+    else
+      return XXH64(ptr, size_in_bytes, 0);
   }
   else
   {
