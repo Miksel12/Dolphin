@@ -1201,7 +1201,8 @@ static void WriteStage(ShaderCode& out, const pixel_shader_uid_data* uid_data, i
         out.Write("\ttevcoord.xy = int2(0, 0);\n");
     }
     out.Write("\ttextemp = ");
-    SampleTexture(out, "float2(tevcoord.xy)", texswap, stage.tevorders_texmap, stereo, api_type);
+    SampleTexture(out, "(((float2)(tevcoord.xy >> 7) + 0.5f) * 128.0f)", texswap,
+                  stage.tevorders_texmap, stereo, api_type);
   }
   else
   {

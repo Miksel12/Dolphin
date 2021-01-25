@@ -897,7 +897,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "      uint sampler_num = {};\n",
               BitfieldExtract("ss.order", TwoTevStageOrders().texmap0));
     out.Write("\n"
-              "      float2 uv = (float2(tevcoord.xy)) * " I_TEXDIMS "[sampler_num].xy;\n");
+              "      float2 uv = (((float2)(tevcoord.xy >> 7) + 0.5f) * 128.0f) * " I_TEXDIMS "[sampler_num].xy;\n");
     out.Write("      int4 color = sampleTexture(sampler_num, float3(uv, {}));\n",
               stereo ? "float(layer)" : "0.0");
     out.Write("      uint swap = {};\n", BitfieldExtract("ss.ac", TevStageCombiner().alphaC.tswap));
