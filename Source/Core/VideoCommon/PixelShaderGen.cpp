@@ -783,9 +783,9 @@ ShaderCode GeneratePixelShaderCode(APIType api_type, const ShaderHostConfig& hos
     out.SetConstantsUsed(C_TEXDIMS, C_TEXDIMS + uid_data->genMode_numtexgens - 1);
     for (u32 i = 0; i < uid_data->genMode_numtexgens; ++i)
     {
-      out.Write("\tint2 fixpoint_uv{} = int2(", i);
+      out.Write("\tint2 fixpoint_uv{} = (int2(", i);
       out.Write("(tex{}.z == 0.0 ? tex{}.xy : tex{}.xy / tex{}.z)", i, i, i, i);
-      out.Write(" * " I_TEXDIMS "[{}].zw);\n", i);
+      out.Write(" * " I_TEXDIMS "[{}].zw) << 8) >> 8;\n", i);
       // TODO: S24 overflows here?
     }
   }
@@ -813,8 +813,10 @@ ShaderCode GeneratePixelShaderCode(APIType api_type, const ShaderHostConfig& hos
       FourTexUnits& texUnit = bpmem.tex[(texmap >> 2) & 1];
       TexMode0& tm0 = texUnit.texMode0[texmap & 3];
 
+      out.Write("\t// minfilter={}, magfilter={}, maxaniso={} \n", u32(tm0.min_filter), u32(tm0.mag_filter), u32(tm0.max_aniso));
+
       SampleTexture(out,
-                    SamplerCommon::IsBpTexMode0PointFiltering(tm0) ?
+                    (tm0.min_filter == 0 || (tm0.mag_filter == 1 || tm0.mag_filter == 0)) ?
                         "((float2(tempcoord >> 7) + 0.5f) * 128.0f)" :
                         "(float2(tempcoord))",
                     "abg", texmap, stereo, api_type);
@@ -1214,10 +1216,13 @@ static void WriteStage(ShaderCode& out, const pixel_shader_uid_data* uid_data, i
     FourTexUnits& texUnit = bpmem.tex[(stage.tevorders_texmap >> 2) & 1];
     TexMode0& tm0 = texUnit.texMode0[stage.tevorders_texmap & 3];
 
+    out.Write("\t// minfilter={}, magfilter={}, maxaniso={} \n", u32(tm0.min_filter),
+              u32(tm0.mag_filter), u32(tm0.max_aniso));
+
     SampleTexture(out,
-                  SamplerCommon::IsBpTexMode0PointFiltering(tm0) ?
-                      "((float2(tevcoord.xy >> 7) + 0.5f) * 128.0f)" :
-                      "float2(tevcoord.xy)",
+                  (tm0.min_filter == 0 || (tm0.mag_filter == 1 || tm0.mag_filter == 0)) ?
+                      "(((float2)(tevcoord.xy >> 7) + 0.5f) * 128.0f)" :
+                      "(float2(tevcoord.xy) + 64.0f)",
                   texswap, stage.tevorders_texmap, stereo, api_type);
   }
   else
